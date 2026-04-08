@@ -1,0 +1,93 @@
+---
+title: "wyne mosquito_csv_data.csv"
+author: "wyne maina"
+date: "2026-03-06"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+## LOAD THE REQUIRED PACKAGES
+```{r}
+library("dplyr")
+library("lubridate")
+```
+## SET THE WORKING DIRECTORY
+```{R}
+setwd("C:/Users/Admin/Desktop/DML")
+```
+## L0AD THE DATASET
+```{r}
+df<-read.csv("mosquito_csv_data.csv")
+```
+# Load necessary libraries
+library(dplyr)
+library(lubridate)
+library(readr)
+
+# Load the dataset
+```{r}
+df <- read.csv("mosquito_csv_data.csv")
+```
+# 1. Summary statistics for all columns
+```{r}
+summary(df)
+```
+# 2. Columns with missing values and NA counts
+```{r}
+colSums(is.na(df))
+```
+# 3. Counts and proportions of each mosquito species
+```{r}
+df %>%
+  count(anoph_species_morpho, sort = TRUE) %>%
+  mutate(proportion = n / sum(n))
+```
+# 4. Number of unique villages and collection clusters
+```{r}
+df %>%
+  summarise(
+    unique_villages = n_distinct(village),
+    unique_clusters = n_distinct(cluster_number, na.rm = TRUE)
+  )
+```
+# 5. Categories and distribution for abdominal status and parity
+```{r}
+df %>% count(abdominal_status)
+df %>% count(parity)
+```
+# 6. Breakdown of samples between core and buffer locations
+```{r}
+df %>% count(core_or_buffer)
+```
+# 7. Full range of collection dates
+```{r}
+df %>%
+  mutate(collection_date = as_date(collection_date)) %>%
+  summarise(
+    start_date = min(collection_date, na.rm = TRUE),
+    end_date = max(collection_date, na.rm = TRUE)
+  )
+```
+# 8. Mosquito collection counts over time (by year)
+```{r}
+df %>%
+  mutate(year = year(as_date(collection_date))) %>%
+  count(year)
+```
+# 9. Pattern of records with missing result dates (checking by species)
+```{r}
+df %>%
+  filter(is.na(result_date)) %>%
+  count(anoph_species_morpho, sort = TRUE)
+```
+# 10. Species composition across different villages (Proportions)
+```{r}
+species_composition<-df %>%
+  count(village, anoph_species_morpho) %>%
+  group_by(village) %>%
+  mutate(proportion = n / sum(n)) %>%
+  ungroup()
+print(species_composition)
+```

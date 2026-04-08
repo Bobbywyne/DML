@@ -1,0 +1,84 @@
+---
+title: "working data"
+author: "wine maina"
+date: "2026-03-02"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+## IMPORT THE NECESSARY PACKAGES
+```{r}
+library("dplyr")
+library("lubridate")
+```
+## SETTING THE WORKING DIRECTORY
+```{r}
+setwd("C:/Users/Admin/Desktop/My project")
+```
+## LOAD THE WORKING DIRECTORY
+```{r}
+library(readr)
+ read_csv("lubridate_dates_project_dataset.csv")
+```
+##QUESTION 1.CREATE NEW COLUMN CALLED order_quarter THAT SHOWS THE QUARTER IN WHICH THE ORDER WAS PLACED
+```{r}
+colnames(df)
+df<-df%>%
+  mutate(
+    #convert to date format
+    order_date=ymd(Order_Date),
+    #create the quarter column
+    order_quarter=
+      quarter(order_date)
+  )
+print(df)
+```
+#QUESTION 2.NUMBER OF ORDERS PLACED IN EACH QUARTER
+```{r}
+df_summary<-df%>%
+  count(order_quarter)
+print(df_summary)
+```
+##QUESTION 3.FIND THE EARLIEST ORDER DATE AN THE LATEST ORDER DATE
+```{r}
+df%>%
+  summarise(earliest_order=min(order_date),
+            latest_order=max(order_date))
+print(df)
+```
+#QUESTION 4.FIND THE NUMBER OF ORDERS PLACED IN EACH MONTH
+```{r}
+df%>%
+  mutate(order_month=month(order_date,label=TRUE))%>%
+  count(order_month)
+print(df)
+```
+#QUESTION 5.FIND THE AVERAGE ORDER AMOUNT FOR EACH WEEKDAY
+```{r}
+df%>%
+  mutate(order_weekday=wday(order_date,label=TRUE))%>%
+  group_by(order_weekday)%>%
+  summarise(avg_order_amount=mean(order_amount))
+print(df)
+```
+#QUESTION 6.CREATE ORDER_WEEK COLUMN (WEEK NUMBER OF YEAR)
+```{r}
+df<-df%>%
+  mutate(order_week=week(order_date))
+print(df)
+```
+#QUESTION 7.FIND THE NUMBER OF ORDERS PLACED IN EACH WEEK
+```{r}
+df%>%
+  count(order_week)
+print(df)
+```
+#QUESTION 8.FIND THE TOTAL SALES FOR EACH QUARTER 
+```{r}
+df%>%
+  group_by(order_quarter)%>%
+  summarise(total_sales=sum(order_amount))
+print(df)
+```

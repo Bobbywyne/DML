@@ -1,0 +1,113 @@
+---
+title: "student perfomance .csv"
+author: "wyne maina"
+date: "2026-03-05"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+# LOAD THE NECESSARY PACKAGE
+```{r}
+library("dplyr")
+```
+## SET THE WORKING DIRECTORY
+```{r}
+setwd("C:/Users/Admin/Desktop/DML")
+```
+## LOAD THE WORKING DIRECTORY
+```{r}
+df<-read.csv("student_performance (1).csv")
+print(df)
+```
+```{r}
+set.seed(123)  # for reproducibility
+
+df <- df %>%
+  mutate(
+    Assignment_Score = sample(40:100, n(), replace = TRUE),
+    Exam_Score       = sample(40:100, n(), replace = TRUE),
+    Total_Score      = Assignment_Score + Exam_Score,
+    Attendance       = sample(50:100, n(), replace = TRUE),
+    Age              = sample(18:25, n(), replace = TRUE)
+  )
+
+```
+##1 HONOURS CATEGORY
+```{r}
+df <- df %>%
+  mutate(Honors_Category = case_when(
+    Total_Score >= 75 ~ "First Class",
+    Total_Score >= 65 ~ "Second Class Upper",
+    Total_Score >= 55 ~ "Second Class Lower",
+    Total_Score >= 50 ~ "Pass",
+    TRUE             ~ "Fail"
+  ))
+print(df)
+```
+##2 RETAKE REQUIRED
+```{r}
+Retake_required <- df %>%
+  mutate(Retake_Required = ifelse(Total_Score < 50 & Attendance >= 70, "Yes", "No"))
+print(Retake_required)
+```
+##3 YOUNG HIGH PERFORMERS
+```{r}
+young_high_perf <- df %>%
+  filter(Age <= 22 & Grade %in% c("A", "B"))
+print(young_high_perf)
+```
+##4 ACADEMIC STATUS
+```{r}
+Academic_Status <- df %>%
+  mutate(Attendance_Status = case_when(
+    Attendance < 60 ~ "Critical",
+    Attendance < 75 ~ "Warning",
+    TRUE ~ "Good Standing"
+  ))
+print(Academic_Status)
+```
+##5 EXTRA CREDIT ELIGIBLITY
+```{r}
+extra_credit_eligibilty <- df %>%
+  mutate(Extra_Credit = ifelse(Assignment_Score > 85 & Exam_Score > 80, "Eligible", "Not Eligible"))
+print(extra_credit_eligibilty )
+```
+##6 DEPARTMENTALHIGH ACHIEVERS COUNT
+```{r}
+high_achievers <- df %>%
+  filter(Grade == "A") %>%
+  count(Department)
+print(high_achievers)
+```
+##7 ACADEMIC RISK FLAG
+```{r}
+academic_risk_flag <- df %>%
+  mutate(Academic_Flag = case_when(
+    Grade %in% c("D", "F") ~ "At Risk",
+    Grade == "C" ~ "Stable",
+    Grade %in% c("A", "B") ~ "Excellent"
+  ))
+print(academic_risk_flag)
+```
+##8 STUDENT WHO IMPROVED IN THE EXAM
+```{r}
+improved_students <- df %>%
+  filter(Exam_Score > Assignment_Score)
+print(improved_student)
+```
+##9 ADJUSTED TOTAL
+```{r}
+adjusted_total<- df %>%
+  mutate(Adjusted_Total = ifelse(Attendance >= 90, Total_Score + 5, Total_Score))
+print(adjusted_total)
+```
+##10 PERFOMANCE SUMMARY BY GENDER
+```{r}
+performance_summary <- df %>%
+  mutate(PassFail = ifelse(Total_Score >= 50, "Passed", "Failed")) %>%
+  group_by(Gender, PassFail) %>%
+  summarise(Count = n(), .groups = "drop")
+print(perfomance_summary)
+```

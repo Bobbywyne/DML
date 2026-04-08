@@ -1,0 +1,68 @@
+---
+title: "line_graph_practice"
+author: "wyne maina"
+date: "2026-03-05"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+## LOAD THE NECESSARY PACKAGE
+```{r}
+library("ggplot2")
+library("dplyr")
+library("tidyverse")
+library("tidyr")
+```
+## SET THE WORKING DIRECTORY
+```{r}
+setwd("C:/Users/Admin/Desktop/DML")
+```
+## LOAD THE WORKING DIRECTORY
+```{r}
+df<-read.csv("monthly_sales_data (1).csv")
+print(df)
+```
+
+## GET THE MONTH FROM THE DATE
+```{r}
+df<-df%>%
+  mutate(month_new=month(Month))
+View(df)
+```
+
+## GET THE COLUMN NAMES
+```{r}
+colnames(df)
+```
+##1 CONVERT DATASET INTO TIME SERIES DATA
+```{r}
+df<-df%>%
+  pivot_longer(
+    cols=c(Product_A,Product_B),
+    names_to="Product",
+    values_to="Sales"
+  )
+```
+
+##1 DRAW A LINE GRAPH SHOWING THE SALES TREND OF PRODUCT A ACROSS THE 12 MONTHS
+```{r}
+df%>%
+ggplot(aes(x=month_new,y=Sales))+geom_line()+geom_point()
+
+```
+## 2 DRAW A LINE GRAPH SHOWING SALES TREND FOR ALL THREE PRODUCT ON ONE GRAPH
+```{R}
+sales_all<-df%>%
+  pivot_longer(
+    cols=c(Product),
+    names_to="Product",
+    values_to="Sales"
+  )
+```
+```{r}
+df%>%
+ggplot(aes(x=month_new,y=Sales))+geom_line()+geom_point()
+```
+````

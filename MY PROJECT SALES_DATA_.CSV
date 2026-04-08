@@ -1,0 +1,108 @@
+---
+
+
+
+title: "SALES_DATA"
+author: "wyne maina"
+date: "2026-03-04"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+## LOAD THE NECESSARY PACKAGES
+```{r}
+library("ggplot2")
+library("dplyr")
+```
+## SET THE WORKING DIRECTORY
+```{r}
+setwd("C:/Users/Admin/Desktop/DML")
+```
+## LOAD THE WORKING DIRECTORY
+```{r}
+library(readr)
+df <- read_csv("sales_data (1).csv")
+print(df)
+```
+# column naming
+```{r}
+colnames(df)
+```
+
+#1. Total Quantity Sold per PaymentMethod
+```{r}
+ggplot(df, aes(x = PaymentMethod, y = Quantity, fill = PaymentMethod)) +
+  geom_bar(stat = "identity") +
+  labs(
+    title = "Total Quantity Sold per Payment Method",
+    x = "Payment Method",
+    y = "Total Quantity"
+  ) +
+  theme_minimal()
+```
+##2. Grouped Bar Chart: Number of Orders per Branch by ProductCategory
+```{r}
+ggplot(df, aes(x = Branch, fill = ProductCategory)) +
+  geom_bar(position = "dodge") +
+  labs(
+    title = "Number of Orders per Branch by Product Category",
+    x = "Branch",
+    y = "Number of Orders"
+  ) +
+  theme_minimal()
+
+```
+#3. Stacked Bar Chart: Total Quantity per ProductCategory split by Branch
+```{r}
+ggplot(df, aes(x = ProductCategory, y = Quantity, fill = Branch)) +
+  geom_bar(stat = "identity") +
+  labs(
+    title = "Total Quantity per Product Category by Branch",
+    x = "Product Category",
+    y = "Total Quantity"
+  ) +
+  theme_minimal()
+```
+##4. Proportional Bar Chart: Percentage Distribution of PaymentMethod within each Branch
+```{r}
+ggplot(df, aes(x = Branch, fill = PaymentMethod)) +
+  geom_bar(position = "fill") +
+  labs(
+    title = "Percentage Distribution of Payment Method within Each Branch",
+    x = "Branch",
+    y = "Proportion"
+  ) +
+  theme_minimal()
+```
+#5. Horizontal Bar Chart: Total Number of Orders per Branch (sorted)
+
+```{r}
+ggplot(df, aes(x=
+                 forcats::fct_infreq(Branch))) +
+  geom_bar(fill = "steelblue") +
+  coord_flip() +
+  labs(
+    title = "Total Number of Orders per Branch",
+    x = "Branch",
+    y = "Number of Orders"
+  ) +
+  theme_minimal()
+
+```
+##6  Faceted Bar Chart: Total Quantity per ProductCategory, separate panels for each PaymentMethod
+```{r}
+ggplot(df, aes(x = ProductCategory, y = Quantity, fill = ProductCategory)) +
+  geom_bar(stat = "identity") +
+  facet_wrap(~ PaymentMethod) +
+  labs(
+    title = "Total Quantity per Product Category by Payment Method",
+    x = "Product Category",
+    y = "Total Quantity"
+  ) +
+  theme_minimal()
+
+
+```
+```

@@ -1,0 +1,158 @@
+---
+title: "student perfomance histogram"
+author: "wyne maina"
+date: "2026-03-13"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+### LOAD THE REGUIRED PACKAGE
+```{r}
+# First, load the dataset
+students <- read.csv("StudentsPerformance.csv")
+
+# Check if there are any missing values (this dataset has none)
+print("Checking for missing values:")
+print(sum(is.na(students)))
+
+# Since there are no missing values, let's create a version WITH some missing values for practice
+# This is just for learning - you wouldn't do this with real data!
+set.seed(123)
+students_na <- students
+students_na$math.score[sample(1:nrow(students_na), 30)] <- NA
+students_na$reading.score[sample(1:nrow(students_na), 20)] <- NA
+students_na$writing.score[sample(1:nrow(students_na), 25)] <- NA
+
+# Now let's solve each question using this dataset with missing values
+```
+##Q1. Count missing values using is.na() and colSums()
+```{r}
+# Simple code for Q1
+total_missing <- sum(is.na(students_na))
+print(paste("Total missing values:", total_missing))
+
+# Missing values per column
+missing_per_column <- colSums(is.na(students_na))
+print("Missing values per column:")
+print(missing_per_column)
+
+# Sort in descending order
+print("Sorted descending:")
+print(sort(missing_per_column, decreasing = TRUE))
+```
+##Q2. Calculate percentage of missing values
+```{r}
+# Simple code for Q2
+total_rows <- nrow(students_na)
+missing_pct <- (colSums(is.na(students_na)) / total_rows) * 100
+print("Missing percentage per column:")
+print(round(missing_pct, 2))
+
+# Show only columns with >10% missing
+print("Columns with >10% missing:")
+print(missing_pct[missing_pct > 10])
+```
+##Q3. Count rows with and without missing values
+```{r}
+# Simple code for Q3
+rows_with_na <- sum(!complete.cases(students_na))
+rows_complete <- sum(complete.cases(students_na))
+
+print(paste("Rows with at least one missing value:", rows_with_na))
+print(paste("Rows with no missing values:", rows_complete))
+```
+##Q4. Create custom summary table
+```{r}
+# Simple code for Q4
+summary_table <- data.frame(
+  Column = names(students_na),
+  Data_Type = sapply(students_na, class),
+  Total = nrow(students_na),
+  Non_Missing = sapply(students_na, function(x) sum(!is.na(x))),
+  Missing = sapply(students_na, function(x) sum(is.na(x)))
+)
+
+print("Custom Summary Table:")
+print(summary_table)
+```
+##
+Q5. Create barplot of missing values
+```{r}
+# Simple code for Q5
+missing_counts <- colSums(is.na(students_na))
+
+# Only show columns with missing values
+missing_counts <- missing_counts[missing_counts > 0]
+
+# Create barplot
+barplot(missing_counts,
+        main = "Missing Values per Column",
+        ylab = "Number Missing",
+        col = "skyblue",
+        las = 2)  # Makes labels vertical
+```
+##Q6. Filter rows where math.score and reading.score are not missing
+```{r}
+# Simple code for Q6
+complete_scores <- students_na[!is.na(students_na$math.score) & 
+                                !is.na(students_na$reading.score), ]
+
+print(paste("Rows with complete math and reading scores:", nrow(complete_scores)))
+```
+##Q7. Find rows with missing values in any score column
+```{r}
+# Simple code for Q7
+missing_in_scores <- students_na[is.na(students_na$math.score) | 
+                                  is.na(students_na$reading.score) | 
+                                  is.na(students_na$writing.score), ]
+
+print("First 10 rows with missing scores (showing row numbers):")
+print(head(missing_in_scores[, c("gender", "math.score", "reading.score", "writing.score")], 10))
+print(paste("Total such rows:", nrow(missing_in_scores)))
+```
+##Q8. Filter female students with complete math scores
+```{r}
+# Simple code for Q8
+female_complete <- students_na[students_na$gender == "female" & 
+                                !is.na(students_na$math.score), ]
+
+print(paste("Female students with complete math scores:", nrow(female_complete)))
+```
+##Q9. Replace missing values with mean and "Unknown"
+```{r}
+# Simple code for Q9
+# Create a copy
+students_fixed <- students_na
+
+# Replace missing math scores with mean
+mean_math <- mean(students_na$math.score, na.rm = TRUE)
+students_fixed$math.score[is.na(students_fixed$math.score)] <- round(mean_math, 1)
+
+# Check if any NAs remain in math.score
+print(paste("NAs in math.score after fix:", sum(is.na(students_fixed$math.score))))
+```
+##Q10. Replace missing values using simple methods
+```{r}
+# Simple code for Q10
+# Create final cleaned dataset
+students_clean <- students_na
+
+# Calculate values for replacement
+median_math <- median(students_na$math.score, na.rm = TRUE)
+median_reading <- median(students_na$reading.score, na.rm = TRUE)
+mean_writing <- mean(students_na$writing.score, na.rm = TRUE)
+
+# Replace missing values
+students_clean$math.score[is.na(students_clean$math.score)] <- median_math
+students_clean$reading.score[is.na(students_clean$reading.score)] <- median_reading
+students_clean$writing.score[is.na(students_clean$writing.score)] <- round(mean_writing, 1)
+
+# Verify no NAs remain
+print("Checking for remaining NAs:")
+print(paste("Math NAs:", sum(is.na(students_clean$math.score))))
+print(paste("Reading NAs:", sum(is.na(students_clean$reading.score))))
+print(paste("Writing NAs:", sum(is.na(students_clean$writing.score))))
+print(paste("Total NAs in cleaned dataset:", sum(is.na(students_clean))))
+```

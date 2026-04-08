@@ -1,0 +1,129 @@
+---
+title: "STUDENT ANALYSIS"
+author: "wyne maina"
+date: "2026-03-18"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+## LOAD THE NECESSARY PACKAGE
+```{r}
+library("dplyr")
+library("lubridate")
+library("ggplot2")
+library("tidyverse")
+```
+
+```{r}
+library(tidyverse)
+
+# Load the dataset
+df <- read.csv("StudentsPerformance.csv")
+
+# Clean column names for easier coding (replaces spaces and slashes with underscores)
+colnames(df) <- gsub("\\.", "_", make.names(colnames(df)))
+# Resulting names: gender, race_ethnicity, parental_level_of_education, lunch, 
+# test_preparation_course, math_score, reading_score, writing_score
+```
+##QUESTION 1.MATH SCORES BY PARENTAL EDUCATION
+```{r}
+ggplot(df, aes(x = parental_level_of_education, y = math_score)) +
+  geom_boxplot(fill = "skyblue") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(title = "Math Scores by Parental Level of Education",
+       x = "Parental Education", y = "Math Score")
+
+# Identify median scores
+df %>%
+  group_by(parental_level_of_education) %>%
+  summarise(median_math = median(math_score)) %>%
+  arrange(desc(median_math))
+```
+##QUESTION 2.WRITING SCORES BY GENDER AND LUNCH TYPE
+```{r}
+ggplot(df, aes(x = gender, y = writing_score, fill = lunch)) +
+  geom_boxplot() +
+  labs(title = "Writing Scores by Gender and Lunch Type",
+       x = "Gender", y = "Writing Score")
+```
+##QUESTION 3.READING SCORES (COMPLETED PREP)BY RAC/ETHNICITY
+```{r}
+prep_completed <- df %>% filter(test_preparation_course == "completed")
+
+ggplot(prep_completed, aes(x = race_ethnicity, y = reading_score)) +
+  geom_boxplot(fill = "lightgreen") +
+  labs(title = "Reading Scores by Race (Test Prep Completed)")
+
+# Calculate IQR to identify largest variability
+prep_completed %>%
+  group_by(race_ethnicity) %>%
+  summarise(IQR_reading = IQR(reading_score)) %>%
+  arrange(desc(IQR_reading))
+```
+##QUESTION 4.FACETED MATHS SCORES BY PREPARATION STATUS
+```{r}
+ggplot(df, aes(x = gender, y = math_score)) +
+  geom_boxplot(fill = "gold") +
+  facet_wrap(~test_preparation_course) +
+  labs(title = "Math Score Distribution by Gender and Prep Course")
+```
+##QUESTION 5.SUBJECT COMPARISON
+```{r}
+df_long <- df %>%
+  pivot_longer(cols = ends_with("score"), names_to = "Subject", values_to = "Score")
+
+ggplot(df_long, aes(x = Subject, y = Score, fill = Subject)) +
+  geom_boxplot() +
+  labs(title = "Score Distributions Across Subjects")
+
+# Check standard deviation for variability
+df_long %>%
+  group_by(Subject) %>%
+  summarise(SD_Score = sd(Score))
+```
+##QUESTION 6.REDING SCORES ORDERED BY MEDIAN
+```{r}
+# Order factor levels based on median reading score
+df_ordered <- df %>%
+  mutate(parental_level_of_education = fct_reorder(parental_level_of_education, reading_score, .fun = median))
+
+ggplot(df_ordered, aes(x = parental_level_of_education, y = reading_score)) +
+  geom_boxplot(fill = "coral") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(title = "Reading Scores Ordered by Median")
+```
+##QUESTION 7.POOR MATHS PERFOMANCE(<-40) AND WRITING
+```{r}
+low_math <- df %>% filter(math_score < 40)
+
+ggplot(low_math, aes(x = gender, y = writing_score)) +
+  geom_boxplot(fill = "plum") +
+  labs(title = "Writing Scores of Students with Math Score < 40")
+```
+##QUESTION 8.MATH OUTLIERS BY RACE/ETHNICITY
+```{r}
+ggplot(df, aes(x = race_ethnicity, y = math_score)) +
+  geom_boxplot(outlier.colour = "red", outlier.shape = 16, outlier.size = 2) +
+  labs(title = "Math Scores and Outliers by Race/Ethnicity")
+```
+##QUESTION 9.FACETED WRITING SCORES BY LUNCH TYPE
+```{r}
+ggplot(df, aes(x = gender, y = writing_score)) +
+  geom_boxplot(fill = "lightblue") +
+  facet_grid(. ~ lunch) +
+  labs(title = "Writing Scores Faceted by Lunch Type")
+```
+##QUESTION 10.MATHS SCORES FOR HIGH PERFOMING READERS
+```{r}
+med_reading <- median(df$reading_score)
+high_readers <- df %>% filter(reading_score > med_reading)
+
+ggplot(high_readers, aes(x = test_preparation_course, y = math_score)) +
+  geom_boxplot(fill = "lightgrey") +
+  labs(title = "Math Scores of High-Performing Readers by Prep Status")
+```

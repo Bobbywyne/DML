@@ -1,0 +1,142 @@
+---
+title: "temperature line graph"
+author: "wyne maina"
+date: "2026-03-13"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+## LOAD THE REQUIRED PACKAGE
+```{r}
+library(dplyr)
+library(lubridate)
+library(ggplot2)
+```
+
+## LOAD AND PREPARE THE DATASET
+```{r}
+data <- read.csv("temperature.csv")
+
+# Convert Year column to date
+data$Date <- ymd(paste0(data$Year, "-01"))
+
+# Extract year and month
+data <- data %>%
+  mutate(
+    Year = year(Date),
+    Month = month(Date)
+  )
+```
+##3. Global Mean Temperature Trend Over the Years
+```{r}
+ggplot(data, aes(x = Date, y = Mean)) +
+  geom_line() +
+  labs(title = "Global Mean Temperature Trend Over Time",
+       x = "Year",
+       y = "Temperature Anomaly") +
+  theme_minimal()
+```
+##4. Temperature Trend for Each Month Across Years
+```{r}
+ggplot(data, aes(x = Year, y = Mean, color = factor(Month))) +
+  geom_line() +
+  labs(title = "Temperature Trend for Each Month Across Years",
+       x = "Year",
+       y = "Temperature Anomaly",
+       color = "Month") +
+  theme_minimal()
+```
+##5. Average Temperature Per Year
+```{r}
+year_avg <- data %>%
+  group_by(Year) %>%
+  summarise(Average_Temp = mean(Mean))
+
+ggplot(year_avg, aes(x = Year, y = Average_Temp)) +
+  geom_line(color = "blue") +
+  labs(title = "Average Temperature per Year",
+       x = "Year",
+       y = "Average Temperature") +
+  theme_minimal()
+```
+##6. January Temperature Trend Over the Years
+```{r}
+jan_data <- data %>%
+  filter(Month == 1)
+
+ggplot(jan_data, aes(x = Year, y = Mean)) +
+  geom_line(color = "red") +
+  labs(title = "January Temperature Trend Over Years",
+       x = "Year",
+       y = "Temperature Anomaly") +
+  theme_minimal()
+```
+##6. January Temperature Trend Over the Years
+```{r}
+jan_data <- data %>%
+  filter(Month == 1)
+
+ggplot(jan_data, aes(x = Year, y = Mean)) +
+  geom_line(color = "red") +
+  labs(title = "January Temperature Trend Over Years",
+       x = "Year",
+       y = "Temperature Anomaly") +
+  theme_minimal()
+```
+##7. Temperature Changes Before and After 1980
+```{r}
+data <- data %>%
+  mutate(Period = ifelse(Year < 1980, "Before 1980", "After 1980"))
+
+period_avg <- data %>%
+  group_by(Year, Period) %>%
+  summarise(Avg_Temp = mean(Mean))
+
+ggplot(period_avg, aes(x = Year, y = Avg_Temp, color = Period)) +
+  geom_line() +
+  labs(title = "Temperature Changes Before and After 1980",
+       x = "Year",
+       y = "Average Temperature") +
+  theme_minimal()
+```
+##8. July Temperature Trend Over the Years
+```{r}
+july_data <- data %>%
+  filter(Month == 7)
+
+ggplot(july_data, aes(x = Year, y = Mean)) +
+  geom_line(color = "orange") +
+  labs(title = "July Temperature Trend Over Years",
+       x = "Year",
+       y = "Temperature Anomaly") +
+  theme_minimal()
+```
+##9. Temperature Changes from January to December for a Selected Year
+```{r}
+selected_year <- max(data$Year)
+
+year_data <- data %>%
+  filter(Year == selected_year)
+
+ggplot(year_data, aes(x = Month, y = Mean)) +
+  geom_line() +
+  labs(title = paste("Temperature Change from January to December in", selected_year),
+       x = "Month",
+       y = "Temperature Anomaly") +
+  theme_minimal()
+```
+##10. Compare Temperature Trends of Two Months (January vs July)
+```{r}
+two_months <- data %>%
+  filter(Month %in% c(1,7))
+
+ggplot(two_months, aes(x = Year, y = Mean, color = factor(Month))) +
+  geom_line() +
+  labs(title = "Comparison of January and July Temperature Trends",
+       x = "Year",
+       y = "Temperature Anomaly",
+       color = "Month") +
+  theme_minimal()
+```

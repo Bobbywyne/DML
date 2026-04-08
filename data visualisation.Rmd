@@ -1,0 +1,344 @@
+---
+title: "data visualisation"
+author: "wyne maina"
+date: "2026-03-13"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+## LOAD THE NECESSARY PACKAGE
+```{r}
+library("dplyr")
+library("lubridate")
+library("ggplot2")
+library("tidyr")
+```
+## SET THE WORKING DIRECTORY
+```{r}
+setwd("C:/Users/Admin/Desktop/DML")
+```
+## LOAD THE WORKING DIRECTORY
+```{r}
+library(readr)
+df<- read_csv("StudentsPerformance.csv")
+View(df)
+```
+## LOAD THE NECESSARY PACKAGE
+```{r}
+# First, load the dataset
+students <- read.csv("StudentsPerformance.csv")
+
+# Fix column names (remove spaces)
+names(students) <- make.names(names(students))
+
+# Look at the data
+head(students)
+```
+```{r}
+colnames(data)
+```
+##Question 1: Line Graph - Average Scores by Parental Education
+```{r}
+
+# Q1: Calculate averages
+q1_data <- summarise(group_by(students, parental.level.of.education),
+                     Math = mean(math.score),
+                     Reading = mean(reading.score),
+                     Writing = mean(writing.score))
+
+# Convert to long format
+q1_long <- pivot_longer(q1_data, 
+                        cols = c("Math", "Reading", "Writing"),
+                        names_to = "Subject",
+                        values_to = "Average_Score")
+
+# Create plot
+ggplot(q1_long, aes(x = parental.level.of.education, 
+                    y = Average_Score, 
+                    group = Subject,
+                    color = Subject)) +
+  geom_line(size = 1) +
+  geom_point(size = 3) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(title = "Average Scores by Parental Education",
+       x = "Parental Education Level",
+       y = "Average Score")
+```
+# Q2: Calculate averages by test prep
+```{r}
+# Calculate averages by test prep
+q2_data <- students %>%
+  group_by(test.preparation.course) %>%
+  summarise(
+    Math = mean(math.score),
+    Reading = mean(reading.score),
+    Writing = mean(writing.score)
+  ) %>%
+  pivot_longer(cols = c(Math, Reading, Writing),
+               names_to = "Subject",
+               values_to = "Average_Score")
+
+# Create line graph
+ggplot(q2_data, aes(x = Subject, 
+                    y = Average_Score, 
+                    group = test.preparation.course,
+                    color = test.preparation.course)) +
+  geom_line(size = 1) +
+  geom_point(size = 4) +
+  theme_minimal() +
+  labs(title = "Test Preparation Course Comparison",
+       x = "Subject",
+       y = "Average Score",
+       color = "Test Prep")
+
+# Check if preparation helps consistently
+q2_comparison <- q2_data %>%
+  pivot_wider(names_from = test.preparation.course, 
+              values_from = Average_Score) %>%
+  mutate(Improvement = completed - none)
+
+print("Score improvement from test prep:")
+print(q2_comparison)
+```
+# Question 3: Grouped Bar Chart - Math Score by Gender and Test Prep
+```{r}
+# Calculate average math scores
+q3_data <- students %>%
+  group_by(gender, test.preparation.course) %>%
+  summarise(avg_math = mean(math.score), .groups = 'drop')
+
+# Create grouped bar chart
+ggplot(q3_data, aes(x = gender, 
+                    y = avg_math, 
+                    fill = test.preparation.course)) +
+  geom_bar(stat = "identity", position = "dodge", width = 0.7) +
+  geom_text(aes(label = round(avg_math, 1)), 
+            position = position_dodge(0.7), 
+            vjust = -0.3) +
+  theme_minimal() +
+  labs(title = "Average Math Score by Gender and Test Prep",
+       x = "Gender",
+       y = "Average Math Score",
+       fill = "Test Prep")
+
+# Find highest group
+q3_highest <- q3_data %>%
+  arrange(desc(avg_math)) %>%
+  slice(1)
+
+print("Group with highest math score:")
+print(q3_highest)
+```
+
+```{r}
+# Count students by parental education and lunch type
+q4_data <- students %>%
+  group_by(parental.level.of.education, lunch) %>%
+  summarise(count = n(), .groups = 'drop') %>%
+  group_by(parental.level.of.education) %>%
+  mutate(proportion = count / sum(count))
+
+# Create stacked bar chart
+ggplot(q4_data, aes(x = parental.level.of.education, 
+                    y = proportion, 
+                    fill = lunch)) +
+  geom_bar(stat = "identity") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(title = "Lunch Type Distribution by Parental Education",
+       x = "Parental Education",
+       y = "Proportion",
+       fill = "Lunch Type") +
+  scale_y_continuous(labels = scales::percent)
+
+# Find highest free/reduced lunch group
+q4_highest <- q4_data %>%
+  filter(lunch == "free/reduced") %>%
+  arrange(desc(proportion))
+
+print("Highest free/reduced lunch proportion:")
+print(head(q4_highest, 1))
+```
+##Question 5: Scatter Plot - Math vs Reading Score
+```{r}
+# Create scatter plot
+ggplot(students, aes(x = math.score, y = reading.score, 
+                     color = gender)) +
+  geom_point(alpha = 0.6, size = 2) +
+  geom_smooth(method = "lm", se = FALSE) +
+  theme_minimal() +
+  labs(title = "Math vs Reading Scores by Gender",
+       x = "Math Score",
+       y = "Reading Score",
+       color = "Gender")
+
+# Calculate correlations by gender
+q5_correlations <- students %>%
+  group_by(gender) %>%
+  summarise(
+    correlation = cor(math.score, reading.score)
+  )
+
+print("Correlation by gender:")
+print(q5_correlations)
+```
+##Question 6: Scatter Plot - Writing vs Reading Score (Faceted)
+```{r}
+# Create faceted scatter plot
+ggplot(students, aes(x = writing.score, y = reading.score)) +
+  geom_point(alpha = 0.3, color = "darkblue") +
+  geom_smooth(method = "lm", color = "red", se = FALSE) +
+  facet_wrap(~test.preparation.course) +
+  theme_minimal() +
+  labs(title = "Writing vs Reading Scores by Test Prep",
+       x = "Writing Score",
+       y = "Reading Score")
+
+# Calculate correlations by test prep
+q6_correlations <- students %>%
+  group_by(test.preparation.course) %>%
+  summarise(
+    correlation = cor(writing.score, reading.score)
+  )
+
+print("Correlation by test prep:")
+print(q6_correlations)
+```
+##Question 7: Histogram - Math Score Distribution by Gender
+```{r}
+# Create faceted histogram
+ggplot(students, aes(x = math.score)) +
+  geom_histogram(bins = 20, fill = "steelblue", color = "white") +
+  facet_wrap(~gender) +
+  theme_minimal() +
+  labs(title = "Math Score Distribution by Gender",
+       x = "Math Score",
+       y = "Count") +
+  geom_vline(data = students %>% 
+               group_by(gender) %>% 
+               summarise(mean_math = mean(math.score)),
+             aes(xintercept = mean_math), 
+             color = "red", linetype = "dashed")
+
+# Summary statistics
+q7_stats <- students %>%
+  group_by(gender) %>%
+  summarise(
+    Mean = mean(math.score),
+    Median = median(math.score),
+    SD = sd(math.score),
+    Min = min(math.score),
+    Max = max(math.score)
+  )
+
+print("Math score statistics by gender:")
+print(q7_stats)
+```
+##Question 8: Histogram - Writing Scores by Lunch Type
+```{r}
+# Create overlapping histograms
+ggplot(students, aes(x = writing.score, fill = lunch)) +
+  geom_histogram(bins = 20, position = "identity", alpha = 0.5, color = "white") +
+  theme_minimal() +
+  labs(title = "Writing Score Distribution by Lunch Type",
+       x = "Writing Score",
+       y = "Count",
+       fill = "Lunch Type") +
+  geom_vline(data = students %>% 
+               group_by(lunch) %>% 
+               summarise(mean_write = mean(writing.score)),
+             aes(xintercept = mean_write, color = lunch), 
+             linetype = "dashed", size = 1,
+             show.legend = FALSE)
+
+# Summary statistics
+q8_stats <- students %>%
+  group_by(lunch) %>%
+  summarise(
+    Mean = mean(writing.score),
+    Median = median(writing.score),
+    SD = sd(writing.score)
+  )
+
+print("Writing score statistics by lunch type:")
+print(q8_stats)
+```
+##Question 9: Faceted Histogram - Reading Scores by Parental Education
+```{r}
+# Create faceted histogram
+ggplot(students, aes(x = reading.score)) +
+  geom_histogram(bins = 20, fill = "coral", color = "white") +
+  facet_wrap(~parental.level.of.education, ncol = 3) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        strip.text = element_text(size = 8)) +
+  labs(title = "Reading Score Distribution by Parental Education",
+       x = "Reading Score",
+       y = "Count")
+
+# Calculate mean and median to assess skewness
+q9_skew <- students %>%
+  group_by(parental.level.of.education) %>%
+  summarise(
+    Mean = mean(reading.score),
+    Median = median(reading.score),
+    Count = n()
+  ) %>%
+  mutate(
+    Skewness = ifelse(Mean > Median, "Right-skewed", 
+                     ifelse(Mean < Median, "Left-skewed", "Symmetric"))
+  ) %>%
+  arrange(desc(Mean - Median))
+
+print("Skewness assessment:")
+print(q9_skew)
+```
+##Question 10: Histogram - Average Student Score
+```{r}
+# Create average score variable
+students <- students %>%
+  mutate(average_score = (math.score + reading.score + writing.score) / 3)
+
+# Calculate mean
+mean_avg <- mean(students$average_score)
+
+# Create histogram
+ggplot(students, aes(x = average_score)) +
+  geom_histogram(bins = 20, fill = "purple", color = "white") +
+  geom_vline(xintercept = mean_avg, 
+             color = "red", size = 1.5, linetype = "dashed") +
+  theme_minimal() +
+  labs(title = "Distribution of Average Student Scores",
+       subtitle = paste("Mean =", round(mean_avg, 2),
+                        "| Median =", round(median(students$average_score), 2)),
+       x = "Average Score (Math + Reading + Writing)/3",
+       y = "Count")
+
+# Summary statistics
+q10_stats <- students %>%
+  summarise(
+    Mean = mean(average_score),
+    Median = median(average_score),
+    SD = sd(average_score),
+    Min = min(average_score),
+    Max = max(average_score)
+  )
+
+print("Average score statistics:")
+print(q10_stats)
+
+# QQ plot for normality check
+ggplot(students, aes(sample = average_score)) +
+  stat_qq() +
+  stat_qq_line(color = "red") +
+  theme_minimal() +
+  labs(title = "Q-Q Plot of Average Scores",
+       x = "Theoretical Quantiles",
+       y = "Sample Quantiles")
+```

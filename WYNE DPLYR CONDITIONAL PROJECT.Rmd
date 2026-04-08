@@ -1,0 +1,143 @@
+---
+title: "WYNE"
+author: "wyne maina"
+date: "2026-03-03"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+## LOAD THE NECESSARY PACKAGES
+```{r}
+library("dplyr")
+```
+## SET THE WORKING DIRECTORY
+```{r}
+setwd("C:/Users/Admin/Desktop/DML")
+```
+## LOAD THE WORKING DIRECTORY
+```{r}
+df<-read.csv("dplyr_conditional_project_dataset.csv")
+View(df)
+```
+
+```{r}
+colnames(df)
+```
+```{r}
+library(dplyr)
+
+# Example: Total Score = 40% Assignment + 60% Exam
+df <- df %>%
+  mutate(Total_Score = 0.4 * Assignment_Score + 0.6 * Exam_Score)
+```
+# CREATE THE GRADE COLLUMN
+```{r}
+df<-df%>%
+  mutate(Grade=case_when(
+    Total_Score>=80~"A",
+    Total_Score>=70~"B",
+    Total_Score>=60~"C",
+    TRUE           ~"F"#this handles everything below 60
+  ))
+  
+print(df)
+```
+##1 CREATE NEW COLUMN honours_category
+```{r}
+# Ensure you use ~ and check that Total_Score matches your csv column name exactly
+df<-df%>%
+  mutate(
+    Total_Score=Assignment_Score+Exam_Score, # Create the missing column
+    Honours_Category=case_when(
+    Total_Score>=75~"First Class",
+    Total_Score>=65~"Second Class Upper",
+    Total_Score>=55~"Second Class Lower ",
+    Total_Score>=50~"Pass",
+    TRUE           ~"Fail"
+    ))
+    print(df)
+```
+#2. IDENTIFY STUDENTS ELIGIBLE FOR RETAKE
+```{r}
+df<-df%>%
+  mutate(Retake_Required=if_else(Total_Score<50&Attendance_Percentage>70,"Yes","No"))
+print(df)
+```
+
+#3.IDENTIFY YOUNG HIGH PERFOMERS
+```{r}
+# THIS CREATES A NEW DATAFRAME CONTAINING ONLY THE STUDENT WHO MEET BOTH CRITERIA
+young_high_perfomers<-df %>%
+  filter(Age<=22, Total_Score>=70)
+print(young_high_perfomers)
+```
+#4.ATTENDANCE WARNING CATEGORY
+```{r}
+df <- df %>%
+  mutate(Attendance_Status = case_when(
+    Attendance_Percentage < 60 ~ "Critical",
+    Attendance_Percentage >= 60 & Attendance_Percentage <= 74 ~ "Warning",
+    Attendance_Percentage >= 75 ~ "Good Standing",
+    TRUE ~ "Unknown"
+  ))
+print(df)
+
+```
+#5 EXTRA CREDIT ELIGIBILITY
+```{r}
+df<-df%>%
+  mutate(Extra_Credit=if_else(Assignment_Score>85&Exam_Score>80,"Eligible","Ineligible"))
+print(df)
+```
+#6 .DEPARTMENTALHIGH ACHIEVERS COUNT
+```{r}
+#Filter for grade A ,group by department, and count
+high_achievers_count<-df%>%
+  filter(Grade=="A")%>%
+  group_by(Department)%>%
+  summarise(High_Achievers_Count=n())
+print(high_achievers_count)
+```
+#7. ACADEMIC RISK FLAG
+```{r}
+# %in% is used to check if a value exist within a specific vector or list of value
+df<-df%>%
+  mutate(Academic_Risk=case_when(
+    Grade %in% c("D","F")~"At risk",
+    Grade=="C"           ~"Stable",
+    Grade %in% c("A","B")~"Excellent",
+    TRUE                ~"Other"
+  ))
+print(df)
+```
+  ))
+#8  STUDENT WHO IMPROVED IN EXAM
+```{r}
+# filter for rows where Exam Score is higher than Assignment Score
+improved_student<-df%>%
+  filter(Exam_Score>Assignment_Score)
+print(improved_student)
+```
+#9 CONDITIONAL BONUS MARKS
+```{r}
+# use if_else to add 5 marks only if attendance is 90 or above
+conditional_bonus<-df%>%
+  mutate(Adjusted_Total=if_else( Attendance_Percentage>=90,
+                                Total_Score+5,
+                                Total_Score))
+print(conditional_bonus)
+```
+# 10 OVERALL PERFOMANCE SUMMARY BY GENDER
+```{r}
+# group by gender and calculate pass/fail total
+perfomance_summary<-df%>%
+  group_by(Gender)%>%
+  summarise(
+    Number_Passed=sum(Total_Score>=50,na.rm = TRUE),
+    Number_Failed=sum(Total_Score<50,na.rm = TRUE)
+  )
+print(perfomance_summary)
+```
+  
